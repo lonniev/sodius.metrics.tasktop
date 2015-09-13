@@ -1,0 +1,198 @@
+{
+    "info": {
+        "version": "0.0.1",
+        "description": "Sodius.Metrics.Api is a REST API allowing consumers to request particular metrics from a Tasktop Studio Sync session and to collect measures from those metrics aperiodically.\n",
+        "title": "Sodius Metrics Tasktop API",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "contact": {
+            "name": "Lonnie VanZandt",
+            "url": "http://sodius.com",
+            "email": "lvanzandt@sodius.com"
+        }
+    },
+    "paths": {
+        "/metrics/syncs/hourly/completed": {
+            "get": {
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A Json Object of Metric Values",
+                        "schema": {
+                            "$ref": "#/definitions/TimestampedCounts"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error"
+                    }
+                },
+                "summary": "Request Completed Syncs for the latest Hour"
+            }
+        },
+        "/metrics/activity/{hoursBack}": {
+            "get": {
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ],
+                "summary": "Request All Activity since Some Hours Back to Now",
+                "responses": {
+                    "200": {
+                        "description": "A Json Object of Metric Values",
+                        "schema": {
+                            "$ref": "#/definitions/Activity"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error"
+                    }
+                },
+                "parameters": [
+                    {
+                        "in": "path",
+                        "description": "A count of hours before now.",
+                        "format": "int32",
+                        "required": true,
+                        "type": "number",
+                        "name": "hoursBack"
+                    }
+                ],
+                "description": "Returns a collection of measurements for metrics gathered over the last number of hours.\n"
+            }
+        }
+    },
+    "schemes": [
+        "http"
+    ],
+    "produces": [
+        "application/json"
+    ],
+    "basePath": "/sync/api",
+    "securityDefinitions": {
+        "basicAuth": {
+            "type": "basic",
+            "description": "HTTP Basic Authentication. Works over `HTTP` and `HTTPS`"
+        }
+    },
+    "host": "sync.rb.oncloudone.com:8888",
+    "definitions": {
+        "CountSyncInRange": {
+            "type": "integer",
+            "description": "The count of Sync Jobs in existence -- within the time range."
+        },
+        "TimestampedCounts": {
+            "items": {
+                "$ref": "#/definitions/TimestampMS"
+            },
+            "type": "array"
+        },
+        "AveProcessingTimeMS": {
+            "type": "number",
+            "description": "The average time in milliseconds a Sync Job was in the Processing state."
+        },
+        "AvePendingTimeMS": {
+            "type": "number",
+            "description": "The average time in milliseconds a Sync Job remained in the Pending state."
+        },
+        "AveConnectorCallTimeMS": {
+            "type": "number",
+            "description": "The average latency in milliseconds between calling a Connector method and receiving its response."
+        },
+        "CountConflictInRange": {
+            "type": "integer",
+            "description": "The count of Sync Jobs that encountered a conflict in modified data between the source and target repositories -- within the time range."
+        },
+        "Activity": {
+            "type": "object",
+            "properties": {
+                "averagePendingTimeMS": {
+                    "$ref": "#/definitions/AvePendingTimeMS"
+                },
+                "conflictCountTotal": {
+                    "type": "integer",
+                    "description": "The count of Sync Jobs that encountered a conflict in modified data between the source and target repositories -- since the Synchronizer started."
+                },
+                "hourly": {
+                    "items": {
+                        "$ref": "#/definitions/HourlyActivity"
+                    },
+                    "type": "array"
+                },
+                "currentErrorsTotal": {
+                    "type": "integer",
+                    "description": "The count of encountered Sync Job errors -- since the Synchronizer started."
+                },
+                "averageConnectorCallTimeMS": {
+                    "$ref": "#/definitions/AveConnectorCallTimeMS"
+                },
+                "syncCountTotal": {
+                    "type": "integer",
+                    "description": "The count of Sync Jobs in existence -- since the Synchronizer started."
+                },
+                "syncCountInRange": {
+                    "$ref": "#/definitions/CountSyncInRange"
+                },
+                "uptimeMS": {
+                    "type": "number",
+                    "description": "The time in milliseconds that the Synchronizer has been in existence."
+                },
+                "conflictCountInRange": {
+                    "$ref": "#/definitions/CountConflictInRange"
+                },
+                "averageProcessingTimeMS": {
+                    "type": "number",
+                    "description": "The average time in milliseconds a Sync Job was in the Processing state."
+                },
+                "averageQueueTimeMS": {
+                    "$ref": "#/definitions/AveQueueTimeMS"
+                }
+            }
+        },
+        "AveQueueTimeMS": {
+            "type": "number",
+            "description": "The average time in milliseconds a Sync Job was in the Queued state awaiting consideration by the Synchronizer worker threads."
+        },
+        "HourlyActivity": {
+            "type": "object",
+            "properties": {
+                "queueTimeMS": {
+                    "$ref": "#/definitions/AveQueueTimeMS"
+                },
+                "pendingTimeMS": {
+                    "$ref": "#/definitions/AvePendingTimeMS"
+                },
+                "startTime": {
+                    "type": "integer",
+                    "description": "The millisecond period from the Epoch to the start of this hour of measurements."
+                },
+                "processingTimeMS": {
+                    "$ref": "#/definitions/AveProcessingTimeMS"
+                },
+                "syncCount": {
+                    "$ref": "#/definitions/CountSyncInRange"
+                },
+                "connectorCallTimeMS": {
+                    "$ref": "#/definitions/AveConnectorCallTimeMS"
+                },
+                "conflictCount": {
+                    "$ref": "#/definitions/CountConflictInRange"
+                }
+            }
+        },
+        "TimestampMS": {
+            "type": "number",
+            "description": "The duration in milliseconds between the measurement and the start of the Epoch."
+        }
+    },
+    "swagger": "2.0",
+    "consumes": [
+        "application/json"
+    ]
+}
